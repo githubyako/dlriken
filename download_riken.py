@@ -127,7 +127,7 @@ if __name__ == '__main__':
 	parser.add_argument("target", help="Folder that will contain the downloaded content")
 	args = parser.parse_args()	
 	if not (args.log or args.tdlog or args.mol):
-		print("Error: no files to download, please use at least one of {--log, --tdlog, --mol} arguments.",file=sys.stderr)
+		print("Error: no file type selected, please use at least one of {--log, --tdlog, --mol}",file=sys.stderr)
 		sys.exit(1)
 	rootpath = args.target + "/" if args.target[-1] != "/" else args.target
 	pathrights = test_access(rootpath)
@@ -135,6 +135,7 @@ if __name__ == '__main__':
 		print("Error: Cannot read or write to path " + rootpath,file=sys.stderr)
 		print("Please correct this or chose another path.",file=sys.stderr)
 		sys.exit(1)
+	print("Output folder \"" + rootpath + "\" successfully tested for r/w rights.")
 	ftypes = []
 	fcount = {}
 	if args.log:
@@ -147,19 +148,19 @@ if __name__ == '__main__':
 		ftypes.append("mol")
 		fcount["mol"] = 0
 
-	print("Getting Riken index...")
+	print("Getting Riken home page index...\r")
 	rikendirs, nbmols = get_riken_index()
+	print(" Done.")
 	dlq = Queue()	
-	print("Starting files listing thread...")
+	print("Starting indexer thread...\r")
 	flt = threading.Thread(target=files_lister, args=(rikendirs,dlq,rootpath,ftypes))
 	flt.daemon = True
 	flt.start()
-
+	print("Done.")
 	while dlq.qsize() == 0:
 		print("Waiting for first downloads to start...", end = "\r")
 		time.sleep(0.3)
-
-	print("Starting download threads...")
+	print("\nStarting download threads...")
 	threads = []
 	for i in range(3):
 		t = threading.Thread(target=download_threadfunct, args=(dlq,rootpath))
